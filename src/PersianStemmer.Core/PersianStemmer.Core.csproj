@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Stemming\Persian\data\all_verbs_stems.fa" />
+    <None Remove="Stemming\Persian\data\Dictionary.fa" />
+    <None Remove="Stemming\Persian\data\Mokassar.fa" />
+    <None Remove="Stemming\Persian\data\Patterns.fa" />
+    <None Remove="Stemming\Persian\data\VerbList.fa" />
+    <None Remove="Stemming\Persian\data\verbs_stem.fa" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Stemming\Persian\data\all_verbs_stems.fa" />
+    <EmbeddedResource Include="Stemming\Persian\data\Dictionary.fa" />
+    <EmbeddedResource Include="Stemming\Persian\data\Mokassar.fa" />
+    <EmbeddedResource Include="Stemming\Persian\data\Patterns.fa" />
+    <EmbeddedResource Include="Stemming\Persian\data\VerbList.fa" />
+    <EmbeddedResource Include="Stemming\Persian\data\verbs_stem.fa" />
+  </ItemGroup>
+
+</Project>
