@@ -2,6 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
+    <Authors>htaghizadeh,jalalx</Authors>
+    <Company />
+    <Product>PersianStemmer</Product>
+    <PackageLicenseUrl>https://github.com/Jalalx/PersianStemmer-CSharp/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/Jalalx/PersianStemmer-CSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Jalalx/PersianStemmer-CSharp</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>stemming</PackageTags>
+    <Description>A .NET Core 2.2 implementation of PersianStemmer-CSharp project.</Description>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>
