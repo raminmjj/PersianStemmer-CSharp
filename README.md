@@ -24,9 +24,9 @@ Use `DefaultPersianStemmer.Run(string)` method to get the stemmed word.
 using PersianStemmer.Core.Stemming.Persian;
 
 DefaultPersianStemmer stemmer = new DefaultPersianStemmer();
-string word1 = stemmer.run("زیباست");
+string word1 = stemmer.Run("زیباست");
 // زیبا
-string word2 = stemmer.run("پدران");
+string word2 = stemmer.Run("پدران");
 // پدر
 ```
 
