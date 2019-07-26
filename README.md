@@ -4,9 +4,9 @@ A .NET Core 2.2 implementation of original [PersianStemmer-CSharp](https://githu
 [![Build status](https://ci.appveyor.com/api/projects/status/4i9y1fg3q3jbd9uh?svg=true)](https://ci.appveyor.com/project/Jalalx/persianstemmer-csharp)
 ![](https://img.shields.io/badge/nuget-PersianStemmer.Core-green)
 
-### Install [Nuget Package](https://www.nuget.org/packages/persianstemmer.core)
+### Installing [Nuget Package](https://www.nuget.org/packages/persianstemmer.core)
 
-If you're using Visual Studio, run following command in Package Manager Console:
+If you're using Visual Studio, run the following command in Package Manager Console:
 ```ps
 Install-Package PersianStemmer.Core
 ```
@@ -23,10 +23,10 @@ Use `DefaultPersianStemmer.Run(string)` method to get the stemmed word.
 ```csharp
 using PersianStemmer.Core.Stemming.Persian;
 
-var ps = new DefaultPersianStemmer();
-ps.run("زیباست");
+DefaultPersianStemmer stemmer = new DefaultPersianStemmer();
+string word1 = ps.run("زیباست");
 // زیبا
-Console.WriteLine(ps.run("پدران"));
+string word2 = ps.run("پدران");
 // پدر
 ```
 
