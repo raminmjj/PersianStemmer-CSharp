@@ -48,10 +48,13 @@ namespace PersianStemmer.Core.Stemming.Persian
 
             using (var resource = assembly.GetManifestResourceStream($"{BASE_NAMESPACE}.{resourceName}"))
             {
-                var content = new byte[(int)resource.Length];
-                resource.Read(content, 0, content.Length);
+                if(resource != null)
+                {
+                    var content = new byte[(int)resource.Length];
+                    resource.Read(content, 0, content.Length);
 
-                stringContent = Encoding.UTF8.GetString(content);
+                    stringContent = Encoding.UTF8.GetString(content);
+                }
             }
 
             return stringContent
@@ -167,7 +170,7 @@ namespace PersianStemmer.Core.Stemming.Persian
 
         }
 
-        private bool Validation(string sWord)
+        private bool Validation(string? sWord)
         {
             return lexicon.Contains(sWord);
         }
@@ -370,14 +373,14 @@ namespace PersianStemmer.Core.Stemming.Persian
             return ExtractStem(sInput, sRule, "${stem}");
         }
 
-        private string GetVerb(string input)
+        private string? GetVerb(string input)
         {
             var tmpNode = verbDic.FindNode(input);
             if (tmpNode != null)
             {
-                Verb vs = tmpNode.Value;
-                if (Validation(vs.getPresent()))
-                    return vs.getPresent();
+                Verb? vs = tmpNode.Value;
+                if (vs == null) return "";
+                if (Validation(vs.getPresent() )) return vs.getPresent();
 
                 return vs.getPast();
             }
@@ -395,8 +398,8 @@ namespace PersianStemmer.Core.Stemming.Persian
                 if (terminate)
                     return terminate;
 
-                string[] sReplace = rule.getSubstitution().Split(';');
-                string pattern = rule.getBody();
+                string[] sReplace = rule.getSubstitution()?.Split(';') ?? Array.Empty<string>();
+                string pattern = rule.getBody() ?? "";
 
                 if (!IsMatch(input, pattern))
                     continue;
@@ -483,7 +486,7 @@ namespace PersianStemmer.Core.Stemming.Persian
                     return stm;
             }
 
-            string s = GetMokassarStem(input);
+            string? s = GetMokassarStem(input);
             if (NormalizeValidation(input, false))
             {
                 //stemList.add(input/*, "[فرهنگ لغت]"*/);

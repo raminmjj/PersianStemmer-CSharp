@@ -8,8 +8,8 @@ namespace PersianStemmer.Core.Stemming.Persian
             this.setPast(sPast);
 
         }
-        private string present;
-        public string getPresent()
+        private string? present;
+        public string? getPresent()
         {
             return present;
         }
@@ -18,8 +18,8 @@ namespace PersianStemmer.Core.Stemming.Persian
             present = value;
         }
 
-        private string past;
-        public string getPast()
+        private string? past;
+        public string? getPast()
         {
             return past;
         }

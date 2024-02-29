@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace PersianStemmer.Core.Stemming
 {
-	internal class Trie<TValue> : System.Collections.IEnumerable, IEnumerable<Trie<TValue>.TrieNodeBase>
+    internal class Trie<TValue> : System.Collections.IEnumerable, IEnumerable<Trie<TValue>.TrieNodeBase>
 	{
 		public abstract class TrieNodeBase
 		{
             protected string m_key = "";
-			protected TValue m_value = default(TValue);
+			protected TValue? m_value = default(TValue);
 
-			public TValue Value
+			public TValue? Value
 			{
 				get { return m_value; }
 				set { m_value = value; }
@@ -27,9 +26,9 @@ namespace PersianStemmer.Core.Stemming
 			public bool HasValue { get { return !Object.Equals(m_value, default(TValue)); } }
 			public abstract bool IsLeaf { get; }
 
-			public abstract TrieNodeBase this[char c] { get; }
+			public abstract TrieNodeBase? this[char c] { get; }
 
-			public abstract TrieNodeBase[] Nodes { get; }
+			public abstract TrieNodeBase[]? Nodes { get; }
 
 			public abstract void SetLeaf();
 
@@ -37,9 +36,9 @@ namespace PersianStemmer.Core.Stemming
 
 			public abstract bool ShouldOptimize { get; }
 
-			public abstract KeyValuePair<Char, TrieNodeBase>[] CharNodePairs();
+			public abstract KeyValuePair<Char, TrieNodeBase>[]? CharNodePairs();
 
-			public abstract TrieNodeBase AddChild(char c, ref int node_count);
+			public abstract TrieNodeBase? AddChild(char c, ref int node_count);
 
 			/// <summary>
 			/// Includes current node value
@@ -89,15 +88,19 @@ namespace PersianStemmer.Core.Stemming
 			public void OptimizeChildNodes()
 			{
 				if (Nodes != null)
-					foreach (var q in CharNodePairs())
+					foreach (var q in CharNodePairs() ?? Array.Empty<KeyValuePair<char, TrieNodeBase>>())
 					{
 						TrieNodeBase n_old = q.Value;
 						if (n_old.ShouldOptimize)
 						{
-							TrieNodeBase n_new = new SparseTrieNode(n_old.CharNodePairs());
-							n_new.m_value = n_old.m_value;
-							Trie<TValue>.c_sparse_nodes++;
-							ReplaceChild(q.Key, n_new);
+							var charNodePairs = n_old.CharNodePairs();
+							if(charNodePairs != null)
+							{
+								TrieNodeBase n_new = new SparseTrieNode(charNodePairs);
+								n_new.m_value = n_old.m_value;
+								Trie<TValue>.c_sparse_nodes++;
+								ReplaceChild(q.Key, n_new);
+							}
 						}
 						n_old.OptimizeChildNodes();
 					}
@@ -118,7 +121,7 @@ namespace PersianStemmer.Core.Stemming
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		internal class SparseTrieNode : TrieNodeBase
 		{
-			Dictionary<Char, TrieNodeBase> d;
+			Dictionary<Char, TrieNodeBase>? d;
 
 			public SparseTrieNode(IEnumerable<KeyValuePair<Char, TrieNodeBase>> ie)
 			{
@@ -127,44 +130,60 @@ namespace PersianStemmer.Core.Stemming
 					d.Add(kvp.Key, kvp.Value);
 			}
 
-			public override TrieNodeBase this[Char c]
+			public override TrieNodeBase? this[Char c]
 			{
-				get
+                get
 				{
-					TrieNodeBase node;
-					return d.TryGetValue(c, out node) ? node : null;
+					if (d!= null && d.TryGetValue(c, out TrieNodeBase? node))
+					{
+						return node;
+					}
+					return null;
 				}
 			}
 
-			public override TrieNodeBase[] Nodes { get { return d.Values.ToArray(); } }
+			public override TrieNodeBase[]? Nodes 
+			{ 
+				get 
+				{
+					if (d == null)
+					{
+						return null; 
+					} 
+					return d.Values.ToArray(); 
+				}
+			}
 
 			/// <summary>
 			/// do not use in current form. This means, run OptimizeSparseNodes *after* any pruning
 			/// </summary>
 			public override void SetLeaf() { d = null; }
 
-			public override int ChildCount { get { return d.Count; } }
+			public override int ChildCount { get { return d?.Count ?? 0; } }
 
-			public override KeyValuePair<Char, TrieNodeBase>[] CharNodePairs()
+			public override KeyValuePair<Char, TrieNodeBase>[]? CharNodePairs()
 			{
-				return d.ToArray();
+				return d?.ToArray();
 			}
 
-			public override TrieNodeBase AddChild(char c, ref int node_count)
+			public override TrieNodeBase? AddChild(char c, ref int node_count)
 			{
-				TrieNodeBase node;
-				if (!d.TryGetValue(c, out node))
+				if (d!= null && !d.TryGetValue(c, out TrieNodeBase? node))
 				{
 					node = new TrieNode();
 					node_count++;
 					d.Add(c, node);
+					return node;
 				}
-				return node;
+				return null;
 			}
 
 			public override void ReplaceChild(Char c, TrieNodeBase n)
 			{
-				d[c] = n;
+				if (d != null)
+				{
+					d[c] = n;
+				}
 			}
 
 			public override bool ShouldOptimize { get { return false; } }
@@ -179,13 +198,13 @@ namespace PersianStemmer.Core.Stemming
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		public class TrieNode : TrieNodeBase
 		{
-			private TrieNodeBase[] nodes = null;
+			private TrieNodeBase[]? nodes = null;
 			private Char m_base;
 
 			public override int ChildCount { get { return (nodes != null) ? nodes.Count(e => e != null) : 0; } }
 			public int AllocatedChildCount { get { return (nodes != null) ? nodes.Length : 0; } }
 
-			public override TrieNodeBase[] Nodes { get { return nodes; } }
+			public override TrieNodeBase[]? Nodes { get { return nodes; } }
 
 			public override void SetLeaf() { nodes = null; }
 
@@ -194,7 +213,7 @@ namespace PersianStemmer.Core.Stemming
 				KeyValuePair<Char, TrieNodeBase>[] rg = new KeyValuePair<char, TrieNodeBase>[ChildCount];
 				Char ch = m_base;
 				int i = 0;
-				foreach (TrieNodeBase child in nodes)
+				foreach (TrieNodeBase child in nodes ?? Array.Empty<TrieNodeBase>())
 				{
 					if (child != null)
 						rg[i++] = new KeyValuePair<char, TrieNodeBase>(ch, child);
@@ -203,7 +222,7 @@ namespace PersianStemmer.Core.Stemming
 				return rg;
 			}
 
-			public override TrieNodeBase this[char c]
+			public override TrieNodeBase? this[char c]
 			{
 				get
 				{
@@ -290,28 +309,34 @@ namespace PersianStemmer.Core.Stemming
 		{
 			if (_root.ShouldOptimize)
 			{
-				_root = new SparseTrieNode(_root.CharNodePairs());
-				c_sparse_nodes++;
+				var charNodePairs = _root.CharNodePairs();
+				if(charNodePairs != null)
+				{
+					_root = new SparseTrieNode(charNodePairs);
+					c_sparse_nodes++;
+				}
 			}
 			_root.OptimizeChildNodes();
 		}
 
 		public TrieNodeBase Root { get { return _root; } }
 
-		public TrieNodeBase Add(String s, TValue v)
+		public TrieNodeBase? Add(String s, TValue v)
 		{
-			TrieNodeBase node = _root;
+			TrieNodeBase? node = _root;
+			if (node == null) return null;	
 			foreach (Char c in s)
-				node = node.AddChild(c, ref c_nodes);
+				node = node!.AddChild(c, ref c_nodes);
 
-			node.Value = v;
+			node!.Value = v;
 		    node.Key = s;
 			return node;
 		}
 
-		public bool Contains(String s)
+		public bool Contains(String? s)
 		{
-			TrieNodeBase node = _root;
+			if(s == null) return false;
+			TrieNodeBase? node = _root;
 			foreach (Char c in s)
 			{
 				node = node[c];
@@ -324,20 +349,20 @@ namespace PersianStemmer.Core.Stemming
 		/// <summary>
 		/// Debug only; this is hideously inefficient
 		/// </summary>
-		public String GetKey(TrieNodeBase seek)
+		public String? GetKey(TrieNodeBase seek)
 		{
 			String sofar = String.Empty;
 
-			GetKeyHelper fn = null;
+			GetKeyHelper? fn = null;
 			fn = (TrieNodeBase cur) =>
 			{
 				sofar += " ";	// placeholder
-				foreach (var kvp in cur.CharNodePairs())
-				{
+				foreach (var kvp in cur.CharNodePairs() ?? Array.Empty<KeyValuePair<char, TrieNodeBase>>())
+                {
 					//Util.SetStringChar(ref sofar, sofar.Length - 1, kvp.Key);
 					if (kvp.Value == seek)
 						return true;
-					if (kvp.Value.Nodes != null && fn(kvp.Value))
+					if (kvp.Value.Nodes != null && fn!=null && fn(kvp.Value))
 						return true;
 				}
 				sofar = sofar.Substring(0, sofar.Length - 1);
@@ -354,20 +379,20 @@ namespace PersianStemmer.Core.Stemming
 		/// Debug only; this is hideously inefficient
 		/// </summary>
 		delegate bool GetKeyHelper(TrieNodeBase cur);
-		public String GetKey(TValue seek)
+		public String? GetKey(TValue seek)
 		{
 			String sofar = String.Empty;
 
-			GetKeyHelper fn = null;
+			GetKeyHelper? fn = null;
 			fn = (TrieNodeBase cur) =>
 			{
 				sofar += " ";	// placeholder
-				foreach (var kvp in cur.CharNodePairs())
-				{
+				foreach (var kvp in cur.CharNodePairs() ?? Array.Empty<KeyValuePair<char, TrieNodeBase>>())
+                {
 					//Util.SetStringChar(ref sofar, sofar.Length - 1, kvp.Key);
 					if (kvp.Value.Value != null && kvp.Value.Value.Equals(seek))
 						return true;
-					if (kvp.Value.Nodes != null && fn(kvp.Value))
+					if (kvp.Value.Nodes != null && fn != null && fn(kvp.Value))
 						return true;
 				}
 				sofar = sofar.Substring(0, sofar.Length - 1);
@@ -379,18 +404,18 @@ namespace PersianStemmer.Core.Stemming
 			return null;
 		}
 
-		public TrieNodeBase FindNode(String s_in)
+		public TrieNodeBase? FindNode(String s_in)
 		{
-			TrieNodeBase node = _root;
+			TrieNodeBase? node = _root;
 			foreach (Char c in s_in)
 				if ((node = node[c]) == null)
 					return null;
 			return node;
 		}
 
-        public TValue ContainsKey(String s_in)
+        public TValue? ContainsKey(String s_in)
 		{
-            TrieNodeBase node = FindNode(s_in);
+            TrieNodeBase? node = FindNode(s_in);
             if (node == null || !node.HasValue)
                 return default(TValue);
 			return node.Value;
@@ -408,9 +433,9 @@ namespace PersianStemmer.Core.Stemming
 		/// means the search fails; it is not the design of the 'OrLast' feature to provide 'closest' or 'best'
 		/// matching but rather to enable truncated tails still in the context of exact prefix matching.
 		/// </summary>
-		public TrieNodeBase FindNodeOrLast(String s_in, out bool f_exact)
+		public TrieNodeBase? FindNodeOrLast(String s_in, out bool f_exact)
 		{
-			TrieNodeBase node = _root;
+			TrieNodeBase? node = _root;
 			foreach (Char c in s_in)
 			{
 				if (node.IsLeaf)
@@ -462,7 +487,7 @@ namespace PersianStemmer.Core.Stemming
         */
 		public IEnumerable<TValue> FindAll(String s_in)
 		{
-			TrieNodeBase node = _root;
+			TrieNodeBase? node = _root;
 			foreach (Char c in s_in)
 			{
 				if ((node = node[c]) == null)
@@ -484,14 +509,14 @@ namespace PersianStemmer.Core.Stemming
 			return node == null ? Enumerable.Empty<TrieNodeBase>() : node.SubsumedNodes();
 		}
 
-		public IEnumerable<TValue> GetAllValues(IEnumerable<string> words)
+		public IEnumerable<TValue?> GetAllValues(IEnumerable<string> words)
 		{
-			return words.Select(FindNode).Where(node => node != null).Select(node => node.Value);
+			return words.Select(FindNode).Where(node => node != null).Select(node => node!.Value);
 		}
 
-        public IEnumerable<TValue> GetAllValuesWithDef(IEnumerable<string> words, Func<string, TValue> def)
+        public IEnumerable<TValue?> GetAllValuesWithDef(IEnumerable<string> words, Func<string, TValue> def)
         {
-            return words.Select(z => (FindNode(z) == null || FindNode(z).Value == null) ? def(z) : FindNode(z).Value);
+            return words.Select(z => (FindNode(z) == null || FindNode(z)!.Value == null) ? def(z) : FindNode(z)!.Value);
         }
        
         public IEnumerable<TValue> AllSubstringValues(String s)
@@ -499,7 +524,7 @@ namespace PersianStemmer.Core.Stemming
 			var i_cur = 0;
 			while (i_cur < s.Length)
 			{
-				TrieNodeBase node = _root;
+				TrieNodeBase? node = _root;
 				int i = i_cur;
 				while (i < s.Length)
 				{
@@ -522,7 +547,7 @@ namespace PersianStemmer.Core.Stemming
 			Char[] rgch = new Char[100];
 			int depth = 0;
 
-			Action<TrieNodeBase> fn = null;
+			Action<TrieNodeBase>? fn = null;
 			fn = (TrieNodeBase cur) =>
 			{
 				if (depth >= rgch.Length)
@@ -531,11 +556,11 @@ namespace PersianStemmer.Core.Stemming
 					Buffer.BlockCopy(rgch, 0, tmp, 0, rgch.Length * sizeof(Char));
 					rgch = tmp;
 				}
-				foreach (var kvp in cur.CharNodePairs())
+				foreach (var kvp in cur.CharNodePairs() ?? Array.Empty<KeyValuePair<char, TrieNodeBase>>())
 				{
 					rgch[depth] = kvp.Key;
 					TrieNodeBase n = kvp.Value;
-					if (n.Nodes != null)
+					if (n.Nodes != null && fn != null)
 					{
 						depth++;
 						fn(n);
@@ -561,7 +586,7 @@ namespace PersianStemmer.Core.Stemming
 			Stack<TrieNodeBase> stk = new Stack<TrieNodeBase>();
 			Char[] rgch = new Char[100];
 
-			Action<TrieNodeBase> fn = null;
+			Action<TrieNodeBase>? fn = null;
 			fn = (TrieNodeBase cur) =>
 			{
 				if (stk.Count >= rgch.Length)
@@ -570,12 +595,12 @@ namespace PersianStemmer.Core.Stemming
 					Buffer.BlockCopy(rgch, 0, tmp, 0, rgch.Length * sizeof(Char));
 					rgch = tmp;
 				}
-				foreach (var kvp in cur.CharNodePairs())
+				foreach (var kvp in cur.CharNodePairs() ?? Array.Empty<KeyValuePair<char, TrieNodeBase>>())
 				{
 					rgch[stk.Count] = kvp.Key;
 					TrieNodeBase n = kvp.Value;
 					stk.Push(n);
-					if (n.Nodes != null)
+					if (n.Nodes != null && fn != null)
 						fn(n);
 					else
 					{
@@ -600,7 +625,10 @@ namespace PersianStemmer.Core.Stemming
 			Trie<TNew> t = new Trie<TNew>();
 			DepthFirstTraverse((s, n) =>
 			{
-				t.Add(s, value_converter(n.Value));
+				if(n.Value != null)
+				{
+					t.Add(s, value_converter(n.Value));
+				}
 			});
 			return t;
 		}
@@ -635,13 +663,18 @@ namespace PersianStemmer.Core.Stemming
 			return trie.AllSubstringValues(s);
 		}
 
-		public static void AddToValueHashset<TKey, TValue>(this Dictionary<TKey, HashSet<TValue>> d, TKey k, TValue v)
-		{
-			HashSet<TValue> hs;
-			if (d.TryGetValue(k, out hs))
-				hs.Add(v);
-			else
-				d.Add(k, new HashSet<TValue> { v });
-		}
+#pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
+        public static void AddToValueHashSet<TKey, TValue>(this Dictionary<TKey, HashSet<TValue>> d, TKey k, TValue v)
+#pragma warning restore CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
+        {
+            if (d.TryGetValue(k, out HashSet<TValue>? hs))
+            {
+                hs?.Add(v);
+            }
+            else
+            {
+                d.Add(k, new HashSet<TValue> { v });
+            }
+        }
 	}
 }

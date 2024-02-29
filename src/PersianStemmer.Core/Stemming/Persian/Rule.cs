@@ -11,8 +11,8 @@ namespace PersianStemmer.Core.Stemming.Persian
             this.setState(bState);
         }
 
-        private string body;
-        public string getBody()
+        private string? body;
+        public string? getBody()
         {
             return body;
         }
@@ -21,8 +21,8 @@ namespace PersianStemmer.Core.Stemming.Persian
             body = value;
         }
 
-        private string substitution;
-        public string getSubstitution()
+        private string? substitution;
+        public string? getSubstitution()
         {
             return substitution;
         }

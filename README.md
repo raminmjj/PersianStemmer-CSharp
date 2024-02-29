@@ -1,5 +1,5 @@
 # PersianStemmer.Core
-A .NET Core 2.2 implementation of original [PersianStemmer-CSharp](https://github.com/htaghizadeh/PersianStemmer-CSharp) project.
+A .NET 8 implementation of original [PersianStemmer-CSharp](https://github.com/htaghizadeh/PersianStemmer-CSharp) project.
 
 [![Build status](https://ci.appveyor.com/api/projects/status/4i9y1fg3q3jbd9uh?svg=true)](https://ci.appveyor.com/project/Jalalx/persianstemmer-csharp)
 ![](https://img.shields.io/badge/nuget-PersianStemmer.Core-green)
