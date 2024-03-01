@@ -663,9 +663,7 @@ namespace PersianStemmer.Core.Stemming
 			return trie.AllSubstringValues(s);
 		}
 
-#pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
-        public static void AddToValueHashSet<TKey, TValue>(this Dictionary<TKey, HashSet<TValue>> d, TKey k, TValue v)
-#pragma warning restore CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
+        public static void AddToValueHashSet<TKey, TValue>(this Dictionary<TKey, HashSet<TValue>> d, TKey k, TValue v) where TKey : notnull
         {
             if (d.TryGetValue(k, out HashSet<TValue>? hs))
             {
